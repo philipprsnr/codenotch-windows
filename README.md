@@ -126,6 +126,13 @@ unified log.
 /usr/bin/log stream --predicate 'subsystem == "com.vinz.codenotch"' --level debug
 ```
 
+## Windows port
+
+A Windows port in C# / .NET 10 + WPF is being planned in this fork. The Swift
+source here is its reference implementation and stays unchanged. See
+[`docs/windows/`](docs/windows/) — start at
+[`TASKS.md`](docs/windows/TASKS.md).
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
