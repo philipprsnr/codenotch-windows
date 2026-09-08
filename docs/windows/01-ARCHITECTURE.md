@@ -18,9 +18,11 @@ not listed here is still open and must be asked, not assumed.
 
 ## 1. Why the layering matters more here than usual
 
-WPF only builds on Windows. This repository is worked on from Claude Code
-sessions that run on Linux containers, where `dotnet build` for a
-`net10.0-windows` target fails outright.
+This repository is worked on from Claude Code sessions that run on Linux
+containers. A `net10.0-windows` target will compile there — `EnableWindowsTargeting`
+in `windows/Directory.Build.props` makes the SDK allow it, and it is worth having
+for the compile errors it catches — but nothing built that way can be executed
+or looked at.
 
 The consequence is not cosmetic. **Everything that can be verified in a session
 must live in a project that targets plain `net10.0`.** Anything that reaches for
@@ -37,9 +39,10 @@ a milestone that can be finished and one that can only be drafted.
 ```
 windows/
   Codenotch.sln
-  Directory.Build.props          # shared: LangVersion, Nullable, TreatWarningsAsErrors
+  Directory.Build.props          # shared settings + the core purity guard
   Directory.Packages.props       # central package versions
-  build.ps1                      # build | test | core-test | run | clean | pack
+  global.json                    # SDK floor, and the dotnet test runner opt-in
+  build.ps1                      # build | test | core-test | guard-test | run | clean | pack
   src/
     Codenotch.Core/              # net10.0        — NO platform references
     Codenotch.Platform.Windows/  # net10.0-windows10.0.22621.0
@@ -47,6 +50,8 @@ windows/
   tests/
     Codenotch.Core.Tests/        # net10.0        — runs on Linux and Windows
     Codenotch.Platform.Tests/    # net10.0-windows — Windows only
+  tools/
+    CorePurityProbe/             # outside the solution; it is meant to fail
 ```
 
 ### `Codenotch.Core` — net10.0, no platform dependencies
@@ -84,8 +89,9 @@ Every implementation of a Core abstraction, and nothing else. No UI.
   `TcpListenerInspector` (`GetExtendedTcpTable`), `ProcessLiveness`
 - `Storage/` — `JsonSettingsStore` (`%APPDATA%\Codenotch\settings.json`),
   `JsonArchiveStore`
-- `System/` — `RegistryAutostart`, `PowerEvents`, `SerilogLog`,
-  `VelopackUpdater`
+- `SystemIntegration/` — `SystemClock`, `RegistryAutostart`, `PowerEvents`,
+  `SerilogLog`, `VelopackUpdater`. Named that way rather than `System/` because
+  a namespace ending in `.System` shadows the real one — see `DECISIONS.md`
 - `Sql/` — `SqliteReader` around `Microsoft.Data.Sqlite`
 
 ### `Codenotch.App` — net10.0-windows, WPF

@@ -1,0 +1,22 @@
+<Project>
+
+  <!--
+    Central package versions. A csproj names a package; it never names a
+    version. Packages land here as the milestone that needs them lands, and
+    each one is a maintainer decision (rule E1) — so this file stays short on
+    purpose.
+  -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup Label="Testing">
+    <!-- xunit.v3 carries its own runner (Microsoft.Testing.Platform), which the
+         .NET 10 SDK drives directly. That is why there is no
+         Microsoft.NET.Test.Sdk and no xunit.runner.visualstudio here, and why
+         windows/global.json opts `dotnet test` into that runner. -->
+    <PackageVersion Include="xunit.v3" Version="4.0.0" />
+  </ItemGroup>
+
+</Project>

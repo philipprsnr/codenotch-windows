@@ -1,0 +1,130 @@
+<Project>
+
+  <!--
+    Applies to every project under windows/. The Swift half of the repository
+    is untouched by this file.
+  -->
+
+  <PropertyGroup>
+    <!-- The only two target frameworks the port uses. Projects pick one; they
+         never spell a framework out themselves. -->
+    <CoreTargetFramework>net10.0</CoreTargetFramework>
+    <WindowsTargetFramework>net10.0-windows10.0.22621.0</WindowsTargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NeutralLanguage>en</NeutralLanguage>
+    <Deterministic>true</Deterministic>
+    <!-- Restoring a net10.0-windows project from Linux fails outright without
+         this (NETSDK1100), which would make `dotnet restore Codenotch.sln`
+         impossible in the sessions that write most of this code. It is a no-op
+         on Windows, and it does not make WPF buildable off Windows — it only
+         lets restore and the platform-neutral half proceed. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+  <!-- ────────────────────────────────────────────────────────────────────
+       Core purity guard — rule B1 in docs/windows/03-RULES.md.
+
+       Codenotch.Core is the only code a Linux session can compile, test and
+       therefore honestly claim to have verified. The day it acquires a WPF,
+       WinForms, WMI or registry reference it stops building there, and the
+       property the whole plan rests on is gone — silently, because the
+       maintainer's Windows machine would still build it fine. So this is a
+       build failure rather than a review comment.
+
+       Keyed on project name here rather than opted into by each csproj, so
+       that switching it off takes a deliberate edit of this file.
+       windows/tools/CorePurityProbe opts in by hand: it is the negative test
+       that proves the guard still fires (`.\build.ps1 guard-test`).
+       ──────────────────────────────────────────────────────────────────── -->
+
+  <PropertyGroup>
+    <IsPlatformNeutralProject Condition="'$(IsPlatformNeutralProject)' == '' And ('$(MSBuildProjectName)' == 'Codenotch.Core' Or '$(MSBuildProjectName)' == 'Codenotch.Core.Tests')">true</IsPlatformNeutralProject>
+    <IsPlatformNeutralProject Condition="'$(IsPlatformNeutralProject)' == ''">false</IsPlatformNeutralProject>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsPlatformNeutralProject)' == 'true'">
+    <!-- Matched against the file name of every resolved reference that did not
+         come from the base shared framework, so a forbidden assembly is caught
+         whether it arrives directly, through a package, or transitively behind
+         two other packages.
+
+         WindowsBase and Microsoft.Win32.Registry are on the list *and* ship as
+         facades inside the Microsoft.NETCore.App targeting pack, which is why
+         the check below skips anything carrying FrameworkReferenceName
+         Microsoft.NETCore.App. Actually calling into those facades from Core
+         does not slip through: they are annotated [SupportedOSPlatform] and
+         CA1416 is an error here, because TreatWarningsAsErrors is on. -->
+    <CoreForbiddenReference Include="PresentationFramework" />
+    <CoreForbiddenReference Include="PresentationCore" />
+    <CoreForbiddenReference Include="PresentationFramework.Aero2" />
+    <CoreForbiddenReference Include="WindowsBase" />
+    <CoreForbiddenReference Include="System.Xaml" />
+    <CoreForbiddenReference Include="System.Windows.Forms" />
+    <CoreForbiddenReference Include="System.Windows.Forms.Primitives" />
+    <CoreForbiddenReference Include="System.Windows.Extensions" />
+    <CoreForbiddenReference Include="System.Drawing.Common" />
+    <CoreForbiddenReference Include="System.Management" />
+    <CoreForbiddenReference Include="System.ServiceProcess.ServiceController" />
+    <CoreForbiddenReference Include="Microsoft.Win32.Registry" />
+    <CoreForbiddenReference Include="Microsoft.Win32.Registry.AccessControl" />
+    <CoreForbiddenReference Include="Microsoft.Win32.SystemEvents" />
+    <CoreForbiddenReference Include="Microsoft.Windows.SDK.NET" />
+    <CoreForbiddenReference Include="WinRT.Runtime" />
+    <CoreForbiddenReference Include="Codenotch.Platform.Windows" />
+    <CoreForbiddenReference Include="Codenotch.App" />
+  </ItemGroup>
+
+  <!-- Cheap checks, before anything is compiled: the target framework itself,
+       and the two properties that pull the whole desktop stack in. -->
+  <Target Name="CheckCoreTargetFramework"
+          Condition="'$(IsPlatformNeutralProject)' == 'true'"
+          BeforeTargets="PrepareForBuild">
+
+    <Error Condition="'$(TargetPlatformIdentifier)' != ''"
+           Code="CODENOTCH0001"
+           Text="Core purity: $(MSBuildProjectName) targets $(TargetFramework), which is platform-specific. It must stay on $(CoreTargetFramework) so it can be built and tested away from Windows. See docs/windows/03-RULES.md rule B1." />
+
+    <Error Condition="'$(UseWPF)' == 'true' Or '$(UseWindowsForms)' == 'true'"
+           Code="CODENOTCH0002"
+           Text="Core purity: $(MSBuildProjectName) sets UseWPF or UseWindowsForms. Anything that needs a window belongs in Codenotch.App, and anything that needs Win32 belongs in Codenotch.Platform.Windows. See docs/windows/03-RULES.md rule B1." />
+
+    <ItemGroup>
+      <!-- Microsoft.NETCore.App is the implicit one every project gets.
+           A second shared framework means WPF, WinForms or ASP.NET. -->
+      <_CoreExtraFrameworkReference Include="@(FrameworkReference)" Exclude="Microsoft.NETCore.App" />
+    </ItemGroup>
+
+    <Error Condition="'@(_CoreExtraFrameworkReference)' != ''"
+           Code="CODENOTCH0003"
+           Text="Core purity: $(MSBuildProjectName) has a FrameworkReference to @(_CoreExtraFrameworkReference, ', '). Only Microsoft.NETCore.App is allowed there. See docs/windows/03-RULES.md rule B1." />
+  </Target>
+
+  <!-- The real check: what actually ended up on the compiler's reference list,
+       direct or transitive. -->
+  <Target Name="CheckCoreReferencesArePlatformNeutral"
+          Condition="'$(IsPlatformNeutralProject)' == 'true'"
+          AfterTargets="ResolveReferences">
+
+    <ItemGroup>
+      <_CoreCheckedReference Include="@(ReferencePath)"
+                             Condition="'%(ReferencePath.FrameworkReferenceName)' != 'Microsoft.NETCore.App'" />
+      <_CoreReferenceName Include="@(_CoreCheckedReference->'%(Filename)')" />
+      <!-- MSBuild has no set intersection, so: everything allowed, then
+           everything except that. -->
+      <_CoreAllowedReference Include="@(_CoreReferenceName)" Exclude="@(CoreForbiddenReference)" />
+      <_CoreForbiddenHit Include="@(_CoreReferenceName)" Exclude="@(_CoreAllowedReference)" />
+    </ItemGroup>
+
+    <Error Condition="'@(_CoreForbiddenHit)' != ''"
+           Code="CODENOTCH0004"
+           Text="Core purity: $(MSBuildProjectName) resolved the platform-specific reference(s) @(_CoreForbiddenHit->Distinct(), ', '). Put the platform code behind an interface in Codenotch.Core/Abstractions and implement it in Codenotch.Platform.Windows. See docs/windows/03-RULES.md rules B1 and B2." />
+  </Target>
+
+</Project>

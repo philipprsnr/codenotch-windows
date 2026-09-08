@@ -2,8 +2,8 @@
 
 Rules exist because this project has three unusual constraints: the code reads
 other applications' private state, the UI is verified against a design frame
-rather than against a spec, and **the person writing most of the code cannot
-build the UI half of it.** Each rule below traces to one of those.
+rather than against a spec, and **the person writing most of the code cannot run
+the UI half of it.** Each rule below traces to one of those.
 
 The short version lives in the repository's `CLAUDE.md`. This is the reasoning.
 
@@ -47,12 +47,13 @@ No `System.Windows.*`, no WPF or WinForms reference, no `System.Management`,
 no `Microsoft.Win32.Registry`, no `System.Drawing.Common`. Enforced by a build
 target in `Directory.Build.props`, not by good intentions.
 
-*Why this one is load-bearing:* WPF only builds on Windows. Work in this
-repository happens partly from Linux sessions where anything targeting
-`net10.0-windows` cannot even be compiled, let alone run. Every line that lives
-in Core is a line that can be built, tested and proven in the session that
-writes it. Every line that lives above it is a line someone has to check by
-hand. Push logic down.
+*Why this one is load-bearing:* work in this repository happens partly from
+Linux sessions, where nothing targeting `net10.0-windows` can be run. It can be
+compiled there — see `EnableWindowsTargeting` in
+`windows/Directory.Build.props`, added in M0 — but compiling is not proving.
+Every line that lives in Core is a line that can be built, tested and proven in
+the session that writes it. Every line that lives above it is a line someone has
+to check by hand. Push logic down.
 
 **B2. Platform access goes through a seam.**
 Filesystem, SQLite, credentials, processes, ports, clock, HTTP, settings,
@@ -82,13 +83,13 @@ rest earn their existence.
 
 ---
 
-## C. Verification rules — because the UI cannot be built here
+## C. Verification rules — because the UI cannot be run here
 
 **C1. State what was actually run.**
 "Core tests pass, 84 of them" is a claim. "The notch renders correctly" is not,
 unless someone looked at it. Never report a WPF or Win32 change as working. Say
-plainly: *written but not compiled here — please run `.\build.ps1 run` and tell
-me whether X happens.*
+plainly: *written and it compiles, but it has never run here — please run
+`.\build.ps1 run` and tell me whether X happens.*
 
 **C2. Every session builds and runs what it can.**
 `dotnet build` and `dotnet test` for `Codenotch.Core` and

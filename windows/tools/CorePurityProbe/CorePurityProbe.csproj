@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The negative test for the core purity guard in ../../Directory.Build.props.
+
+    A guard nobody has seen fire is a guard nobody knows still works. This
+    project opts itself into the guard and then commits one violation per
+    build, chosen by $(PurityVector), so `.\build.ps1 guard-test` can assert
+    that each one is refused. It is deliberately outside Codenotch.sln: it is
+    meant to fail.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework Condition="'$(PurityVector)' != 'Platform'">$(CoreTargetFramework)</TargetFramework>
+    <TargetFramework Condition="'$(PurityVector)' == 'Platform'">$(WindowsTargetFramework)</TargetFramework>
+    <RootNamespace>CorePurityProbe</RootNamespace>
+    <IsPackable>false</IsPackable>
+
+    <!-- The one place this is set by hand. Codenotch.Core and
+         Codenotch.Core.Tests get it from Directory.Build.props by name. -->
+    <IsPlatformNeutralProject>true</IsPlatformNeutralProject>
+
+    <!-- 'None' is the control: no violation, so the build must succeed. If this
+         one fails, the guard has started rejecting innocent projects. -->
+    <PurityVector Condition="'$(PurityVector)' == ''">None</PurityVector>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(PurityVector)' == 'Wpf'">
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(PurityVector)' == 'Package'">
+    <!-- VersionOverride rather than a line in Directory.Packages.props: the
+         central version list describes what the product ships, and this is not
+         part of the product. -->
+    <PackageReference Include="System.Management" VersionOverride="10.0.11" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(PurityVector)' == 'Framework'">
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(PurityVector)' == 'Project'">
+    <ProjectReference Include="..\..\src\Codenotch.Platform.Windows\Codenotch.Platform.Windows.csproj" />
+  </ItemGroup>
+
+</Project>

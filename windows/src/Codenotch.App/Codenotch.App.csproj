@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The WPF shell. Builds on Windows only, full stop — nothing in here can be
+    compiled or checked from a Linux session (rule C1).
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>$(WindowsTargetFramework)</TargetFramework>
+    <RootNamespace>Codenotch.App</RootNamespace>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <!-- WinForms is here for exactly one thing: NotifyIcon. WPF has no tray
+         icon of its own, and the alternatives are a Shell_NotifyIcon P/Invoke
+         written blind or a third-party package. See docs/windows/DECISIONS.md. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>Codenotch</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- WinForms and WPF both define Application, MessageBox and Clipboard, and
+         the WinForms implicit global using makes every one of them ambiguous in
+         a project that has both. WPF wins; Tray/TrayIcon.cs names the WinForms
+         namespace itself. -->
+    <Using Remove="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Codenotch.Core\Codenotch.Core.csproj" />
+    <ProjectReference Include="..\Codenotch.Platform.Windows\Codenotch.Platform.Windows.csproj" />
+  </ItemGroup>
+
+</Project>

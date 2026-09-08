@@ -1,0 +1,18 @@
+# Build output
+bin/
+obj/
+publish/
+artifacts/
+
+# Velopack output (M9)
+Releases/
+
+# Local editor and tooling state
+.vs/
+.idea/
+*.user
+*.suo
+*.binlog
+
+# NuGet
+*.nupkg

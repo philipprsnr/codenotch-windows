@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Implementations of the Codenotch.Core abstractions, and nothing else. No UI.
+    Builds on Windows only; a Linux session can restore and compile the parts
+    that touch no Windows-only API, but nothing here counts as verified until
+    the maintainer has run it.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>$(WindowsTargetFramework)</TargetFramework>
+    <RootNamespace>Codenotch.Platform.Windows</RootNamespace>
+    <SupportedOSPlatformVersion>10.0.22621.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Codenotch.Core\Codenotch.Core.csproj" />
+  </ItemGroup>
+
+</Project>

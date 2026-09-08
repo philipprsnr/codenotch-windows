@@ -7,7 +7,9 @@ Two things live in this repository.
    below. Do not edit it. If something in it is wrong, say so; do not fix it
    here.
 2. **`windows/`** — a Windows port in C# / .NET 10 + WPF. This is where all new
-   work goes. Nothing exists yet beyond planning.
+   work goes. The solution skeleton is up (M0); everything from M1 on is still
+   planning. `windows/build.ps1` is the entry point — `core-test` and
+   `guard-test` are the two commands that work away from Windows.
 
 Start every session at **[`docs/windows/TASKS.md`](docs/windows/TASKS.md)**.
 
@@ -48,12 +50,15 @@ Start every session at **[`docs/windows/TASKS.md`](docs/windows/TASKS.md)**.
 - DPI conversion happens in exactly one place, at the interop boundary.
 
 **Verification — read this one twice**
-- WPF only builds on Windows. Sessions that run on Linux **cannot compile or run
-  anything targeting `net10.0-windows`.** Push logic down into Core, where it
-  can be built and tested in the session that writes it.
+- Sessions that run on Linux **cannot run anything targeting
+  `net10.0-windows`.** They *can* compile it — the .NET 10 SDK allows that with
+  `EnableWindowsTargeting`, and it catches C# mistakes early — but a green build
+  is not verification. Push logic down into Core, where it can be built *and
+  tested* in the session that writes it.
 - Build and test `Codenotch.Core` before ending any session. Never leave it red.
-- Never report WPF or Win32 work as working. Say: *written but not compiled
-  here — please run `.\build.ps1 run` and tell me whether X happens.*
+- Never report WPF or Win32 work as working. Say: *written and it compiles, but
+  it has never run here — please run `.\build.ps1 run` and tell me whether X
+  happens.*
 - Every provider adapter arrives with fixture tests. Where a Swift test covers
   the same behaviour, port it rather than writing a new one — it usually
   encodes a bug that was already found once.

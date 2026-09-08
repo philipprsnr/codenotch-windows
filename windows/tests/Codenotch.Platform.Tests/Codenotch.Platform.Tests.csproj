@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Windows-only. Everything here needs a real Windows machine to mean
+    anything, which is exactly why as little as possible lives here.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>$(WindowsTargetFramework)</TargetFramework>
+    <RootNamespace>Codenotch.Platform.Tests</RootNamespace>
+    <SupportedOSPlatformVersion>10.0.22621.0</SupportedOSPlatformVersion>
+    <!-- xunit.v3 test projects are self-hosting: the runner is in the assembly. -->
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Codenotch.Core\Codenotch.Core.csproj" />
+    <ProjectReference Include="..\..\src\Codenotch.Platform.Windows\Codenotch.Platform.Windows.csproj" />
+  </ItemGroup>
+
+</Project>

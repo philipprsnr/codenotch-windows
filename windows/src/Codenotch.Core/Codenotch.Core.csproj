@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Platform-neutral by contract, not by habit. Directory.Build.props fails the
+    build if this project ever resolves a WPF, WinForms, WMI or registry
+    reference — see the core purity guard there, and rule B1.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>$(CoreTargetFramework)</TargetFramework>
+    <RootNamespace>Codenotch.Core</RootNamespace>
+  </PropertyGroup>
+
+</Project>

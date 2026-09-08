@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The suite that runs everywhere, including the Linux sessions this port is
+    largely written from. It is under the core purity guard too: a test project
+    that needs Windows is a test project that stops being run.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>$(CoreTargetFramework)</TargetFramework>
+    <RootNamespace>Codenotch.Core.Tests</RootNamespace>
+    <!-- xunit.v3 test projects are self-hosting: the runner is in the assembly. -->
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Codenotch.Core\Codenotch.Core.csproj" />
+  </ItemGroup>
+
+</Project>
